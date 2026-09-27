@@ -1,8 +1,21 @@
 # Set the minimum CMake version required
 cmake_minimum_required(VERSION 3.16)
 
+# Enable vcpkg integration
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "")
+endif()
+
 # Project name and version
-project(Futureboard VERSION 1.0 LANGUAGES CXX)
+project(Futureboard VERSION 1.0.0 LANGUAGES CXX)
+
+# Extract version components
+string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)" dummy
+    ${PROJECT_VERSION})
+set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
+set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -22,40 +35,40 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
     "src/*.hpp"
 )
 
-# Find the PortAudio package
-find_package(PortAudio REQUIRED)
-
-# Include the PortAudio headers
-include_directories(${PORTAUDIO_INCLUDE_DIRS})
-# Specify the Windows SDK include directory
-include_directories("C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um")
-include_directories("C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/shared")
-include_directories("C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/winrt")
+# Find the PortAudio package using vcpkg
+find_package(PortAudio CONFIG REQUIRED)
 
 # Resource files
 set(RESOURCE_FILES ${CMAKE_SOURCE_DIR}/resources/shared.qrc)
-set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/resources/app.rc")
+
+# Configure the .rc file
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.rc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/resources/app.rc
+    @ONLY
+)
+
 # Add the executable target and include resource files
-add_executable(${PROJECT_NAME} WIN32 
+add_executable(${PROJECT_NAME} WIN32
     ${SRC_FILES}
     ${RESOURCE_FILES}
-    ${app_icon_resource_windows}
-    ${PORTAUDIO_LIBRARIES}
+    ${CMAKE_CURRENT_BINARY_DIR}/resources/app.rc
 )
 
 # Link libraries to the target
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    Qt6::Core 
-    Qt6::Gui 
-    Qt6::Quick 
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
     Qt6::Widgets
     Qt6::QuickWidgets
+    PortAudio::PortAudio
 )
 
 # Set include directories for headers
-target_include_directories(${PROJECT_NAME} 
-    PRIVATE 
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
     src
 )
 

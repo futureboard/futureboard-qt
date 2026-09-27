@@ -14,10 +14,10 @@ def main():
     os.makedirs("./win", exist_ok=True)
 
     # Path to your source image
-    source_image = "raw/PluginScanner.png"  # Replace with your image path
+    source_image = "raw/OpenSampler.png"  # Replace with your image path
 
     # Generate .ico file
-    create_ico(source_image, "./win/PluginScanner.ico")
+    create_ico(source_image, "./win/OpenSampler.ico")
 
     print("Icon pack generated successfully!")
 
